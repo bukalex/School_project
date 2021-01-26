@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 import time
 from math import sqrt
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtGui, QtCore
 import sys
 
 
-class processy():
+class Processy():
     def __init__(self, resh, window):
         while True:         #запуск цикла
         #for i in range(10):
@@ -15,7 +15,7 @@ class processy():
             QtWidgets.qApp.processEvents()
 
     
-class view():
+class View():
     def __init__(self):
         self.window = QtWidgets.QWidget()
         self.window.resize(1250, 1000)
@@ -32,10 +32,7 @@ class view():
         
         self.btn_start = QtWidgets.QPushButton('&Запуск')
         self.btn_start.clicked.connect(self.options)
-        self.vvod_a_b_m_k_l_dt = []
-        for i in range(5):
-            self.vvod = QtWidgets.QSpinBox()
-            self.vvod_a_b_m_k_l_dt.append(self.vvod)
+        self.vvod_a_b_m_k_l_dt = [QtWidgets.QSpinBox() for i in range(5)]
         self.vvod = QtWidgets.QDoubleSpinBox()
         self.vvod_a_b_m_k_l_dt.append(self.vvod)
         self.btn_start.setGeometry(50, 50, 150, 50)
@@ -71,15 +68,18 @@ class view():
         for i in self.vvod_a_b_m_k_l_dt:
             self.opt_scene.addWidget(i)
 
-        self.radio_3 = QtWidgets.QRadioButton()
-        self.radio_4 = QtWidgets.QRadioButton()
-        self.radio_6 = QtWidgets.QRadioButton()
+        self.radio_3_4_6 = [QtWidgets.QRadioButton() for i in range(3)]
+        self.radio_3_4_6[1].setChecked(True)
+        self.radio_check = [False, True, False]
         self.radio_group = QtWidgets.QGroupBox('Выберите форму элементарной ячейки:')
-        self.radio_group.setGeometry(10, 600, 230, 200)
+        self.radio_group.setGeometry(10, 600, 230, 300)
         self.vbox = QtWidgets.QVBoxLayout()
-        self.vbox.addWidget(self.radio_3)
-        self.vbox.addWidget(self.radio_4)
-        self.vbox.addWidget(self.radio_6)
+        self.images = [QtGui.QPixmap('images\треугольник'), QtGui.QPixmap('images\квадрат.png'), QtGui.QPixmap('images\шестиугольник.png')]
+        for i in range(len(self.radio_3_4_6)):
+            self.icon = QtGui.QIcon(self.images[i])
+            self.radio_3_4_6[i].setIcon(self.icon)
+            self.radio_3_4_6[i].setIconSize(QtCore.QSize(100, 100))
+            self.vbox.addWidget(self.radio_3_4_6[i])
         self.radio_group.setLayout(self.vbox)
         self.opt_scene.addWidget(self.radio_group)
         
@@ -92,20 +92,22 @@ class view():
         self.k = self.vvod_a_b_m_k_l_dt[3].value()           #коэффициент жесткости пружин
         self.l = self.vvod_a_b_m_k_l_dt[4].value()           #длина нерастянутой пружины
         self.dt = self.vvod_a_b_m_k_l_dt[5].value()         #промежуток времени
+        for i in range(len(self.radio_3_4_6)):
+            self.radio_check[i]=self.radio_3_4_6[i].isChecked()
         self.start()
 
     def start(self):
         self.scene.clear()
-        resh = reshetka(self.a, self.b, self.dt, self.l, self.k, self.m)
-        resh.displacement(1, 1, [2, -2])
+        resh = Reshetka(self.a, self.b, self.dt, self.l, self.k, self.m, self.radio_check)
+        resh.displacement(1, 1, [1, -1])
         self.ellipse = []
         for i in range(self.a):          #загрузка изображений на сцену
             for j in range(self.b):
                 self.ell = QtWidgets.QGraphicsEllipseItem(300, 100, 50, 50)
-                self.scene.addItem(self.ell)
                 self.ell.setPos(resh.matrix[i][j].x, resh.matrix[i][j].y)
                 self.ellipse.append(self.ell)
-        self.programm = processy(resh, self)
+                self.scene.addItem(self.ell)
+        self.programm = Processy(resh, self)
 
     def move_graphics(self, matrix):            #перемещение изображений
         for i in range(self.a):
@@ -115,8 +117,8 @@ class view():
                 self.ellipse[i*self.b+j].moveBy(x, y)
                 
 
-class chastica():
-    def __init__(self, m, i, j, k, l):
+class Chastica():
+    def __init__(self, m, i, j, k, l, radio_check):
         self.m = m
         self.i = i
         self.j = j
@@ -124,9 +126,20 @@ class chastica():
         self.l = l
         self.Vx = 0
         self.Vy = 0
-        self.x = l*j
-        self.y = l*i
-        self.z = 0
+        if radio_check[0]:
+            self.x = l*j+(i+1)%2*(l/2)
+            self.y = sqrt(l**2-(l/2)**2)*i
+            self.z = 0
+        elif radio_check[1]:
+            self.x = l*j
+            self.y = l*i
+            self.z = 0
+        elif radio_check[2]:
+            self.x = l*j+(i+1)%2*l/2+(j+1)//2*l
+            if i%2 == 0 and j%2 == 1:
+                self.x -= l
+            self.y = sqrt(l**2-(l/2)**2)*i
+            self.z = 0
         self._x_ = self.x
         self._y_ = self.y
         self._z_ = self.z
@@ -153,18 +166,19 @@ class chastica():
         self.y = 2*self.y-_y_+(self.Fy/self.m)*(dt**2)
         
         
-class reshetka():
-    def __init__(self, a, b, dt, l, k, m):
+class Reshetka():
+    def __init__(self, a, b, dt, l, k, m, radio_check):
         self.a = a
         self.b = b
         self.dt = dt
         self.l = l
         self.k = k
         self.m = m
+        self.radio_check = radio_check
         self.matrix = self.create_matrix()
 
     def create_matrix(self):
-        return [[chastica(self.m, i, j, self.k, self.l) for j in range(self.b)] for i in range(self.a)]
+        return [[Chastica(self.m, i, j, self.k, self.l, self.radio_check) for j in range(self.b)] for i in range(self.a)]
 
     def displacement(self, i, j, displ):
         self.matrix[i][j].x += displ[0]
@@ -181,13 +195,31 @@ class reshetka():
 
     def get_neighbours(self, i, j):
         particles = []
-        for n in range(3):
-            for nn in range(3):
-                particles.append(self.matrix[i+n-1][j+nn-1])
+        if self.radio_check[0]:
+            for b in range(2):
+                particles.append(self.matrix[i][j+(-1)**b])
+            for a in range(2):
+                for b in range(2):
+                    if i%2 == 0:
+                        particles.append(self.matrix[i+(-1)**a][j+b])
+                    else:
+                        particles.append(self.matrix[i+(-1)**a][j-b])
+        elif self.radio_check[1]:
+            for a in range(2):
+                particles.append(self.matrix[i+(-1)**a][j])
+            for b in range(2):
+                particles.append(self.matrix[i][j+(-1)**b])
+        elif self.radio_check[2]:
+            if j%2 == 1:
+                particles.append(self.matrix[i][j-1])
+            else:
+                particles.append(self.matrix[i][j+1])
+            for a in range(2):
+                particles.append(self.matrix[i+(-1)**a][j])
         return particles
 
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    window = view()
+    window = View()
     sys.exit(app.exec_())
