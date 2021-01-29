@@ -28,6 +28,7 @@ class Chastica():
         self._z_ = self.z
         self.Fx = 0
         self.Fy = 0
+        self.pause = False
 
     def sily(self, particles):
         self.Fx = 0
@@ -40,14 +41,15 @@ class Chastica():
                 self.Fx += self.k*(d-self.l)*(part.x-self.x)/d
                 self.Fy += self.k*(d-self.l)*(part.y-self.y)/d
 
-    def move(self,dt):
-        _x_ = self._x_
-        _y_ = self._y_
-        self._x_ = self.x
-        self._y_ = self.y
-        self.x = 2*self.x-_x_+(self.Fx/self.m)*(dt**2)
-        self.y = 2*self.y-_y_+(self.Fy/self.m)*(dt**2)
-        
+    def move(self, dt):
+        if not self.pause:
+            _x_ = self._x_
+            _y_ = self._y_
+            self._x_ = self.x
+            self._y_ = self.y
+            self.x = 2*self.x-_x_+(self.Fx/self.m)*(dt**2)
+            self.y = 2*self.y-_y_+(self.Fy/self.m)*(dt**2)
+            
         
 class Reshetka():
     def __init__(self, a, b, dt, l, k, m, radio_check):
