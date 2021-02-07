@@ -95,10 +95,10 @@ class Reshetka():
             for b in range(2):
                 particles.append(self.matrix[i][j+(-1)**b])
         elif self.radio_check[2]:
-            if j%2 == 1:
-                particles.append(self.matrix[i][j-1])
-            else:
+            if (i + j)%2 == 0:
                 particles.append(self.matrix[i][j+1])
+            else:
+                particles.append(self.matrix[i][j-1])
             for a in range(2):
                 particles.append(self.matrix[i+(-1)**a][j])
         return particles

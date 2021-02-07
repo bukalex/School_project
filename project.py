@@ -131,6 +131,7 @@ class View():
         self.btn_stop.setText('&Остановить')
         self.resh = Reshetka(self.a, self.b, self.dt, self.l, self.k, self.m, self.radio_check)
         self.resh.displacement(1, 1, [1, -1])
+                
         self.ellipse = []
         for i in range(self.a):          #загрузка изображений на сцену
             for j in range(self.b):
@@ -139,6 +140,7 @@ class View():
                 self.ell.setPos(self.resh.matrix[i][j].x, self.resh.matrix[i][j].y)
                 self.ellipse.append(self.ell)
                 self.scene.addItem(self.ell)
+                
         self.programm = Processy(self.resh, self)
 
     def move_graphics(self, matrix):            #перемещение изображений
