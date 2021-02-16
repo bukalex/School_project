@@ -9,6 +9,7 @@ class Chastica():
         self.l = l
         self.Vx = 0
         self.Vy = 0
+        self.V = 0
         if radio_check[0]:
             self.x = l*j+(i+1)%2*(l/2)
             self.y = sqrt(l**2-(l/2)**2)*i
@@ -49,6 +50,9 @@ class Chastica():
             self._y_ = self.y
             self.x = 2*self.x-_x_+(self.Fx/self.m)*(dt**2)
             self.y = 2*self.y-_y_+(self.Fy/self.m)*(dt**2)
+            self.Vx += dt*self.Fx/self.m
+            self.Vy += dt*self.Fy/self.m
+            self.V = sqrt(self.Vx**2+self.Vy**2)
             
         
 class Reshetka():
