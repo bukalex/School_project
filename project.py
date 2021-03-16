@@ -9,13 +9,12 @@ import sys
 
 class Processy():
     def __init__(self, resh, graph, radio_check, a, b, window):
-        while True:         #запуск цикла
-        #for i in range(10):
+        while True:         # запуск цикла
             time.sleep(0.005)
-            #if resh.matrix[0][0].pause == False:
-            #    graph.update(resh.matrix, a, b, radio_check)
-            resh.step()
-            window.move_graphics(resh.matrix)  # обновление изображения
+            if resh.matrix[0][0].pause == False:
+                graph.update(resh.Wp, resh.Wk, resh.W)    # обновление графика
+            resh.step()                                         # пересчет данных
+            window.move_graphics(resh.matrix)                   # обновление изображения
             QtWidgets.qApp.processEvents()
 
     
@@ -90,33 +89,15 @@ class View():
             self.radio_3_4_6[i].setIconSize(QtCore.QSize(100, 100))
             self.vbox.addWidget(self.radio_3_4_6[i])
         self.radio_group.setLayout(self.vbox)
-
-        self.resh = Reshetka(self.a, self.b, self.dt, self.l, self.k, self.m, self.radio_check)
-        self.ellipse = []
-        for i in range(self.a):
-            for j in range(self.b):
-                self.ell = QtWidgets.QGraphicsEllipseItem(300, 100, 50, 50)
-                self.ell.setPos(self.resh.matrix[i][j].x, self.resh.matrix[i][j].y)
-                self.ellipse.append(self.ell)
-                self.scene.addItem(self.ell)
-        self.lines()
-        
+        self.draw()
         self.window.show()
 
     def radiobutton(self):
         if not self.btn_start_pressed:
             self.scene.clear()
-            self.lines()
             for i in range(len(self.radio_3_4_6)):
                 self.radio_check[i]=self.radio_3_4_6[i].isChecked()
-            self.resh = Reshetka(self.a, self.b, self.dt, self.l, self.k, self.m, self.radio_check)
-            self.ellipse = []
-            for i in range(self.a):
-                for j in range(self.b):
-                    self.ell = QtWidgets.QGraphicsEllipseItem(300, 100, 50, 50)
-                    self.ell.setPos(self.resh.matrix[i][j].x, self.resh.matrix[i][j].y)
-                    self.ellipse.append(self.ell)
-                    self.scene.addItem(self.ell)
+            self.draw()
 
     def options(self):
         self.a = self.vvod_a_b_m_k_l_dt[0].value()
@@ -135,19 +116,11 @@ class View():
         self.scene.clear()
         self.btn_stop.setEnabled(True)
         self.btn_stop.setText('&Остановить')
-        self.resh = Reshetka(self.a, self.b, self.dt, self.l, self.k, self.m, self.radio_check)
+        self.draw()
         self.resh.displacement(1, 1, [1, -1])
-
-        self.lines()
-     
-        self.ellipse = []
-        for i in range(self.a):          #загрузка изображений на сцену
+        for i in range(self.a):
             for j in range(self.b):
                 self.resh.matrix[i][j].pause = False
-                self.ell = QtWidgets.QGraphicsEllipseItem(300, 100, 50, 50)
-                self.ell.setPos(self.resh.matrix[i][j].x, self.resh.matrix[i][j].y)
-                self.ellipse.append(self.ell)
-                self.scene.addItem(self.ell)
                 
         self.programm = Processy(self.resh, self.graph, self.radio_check, self.a, self.b, self)
 
@@ -155,7 +128,11 @@ class View():
         if self.resh.matrix[0][0].pause == False:
             for i in self.lines_list:
                 self.scene.removeItem(i)
-            self.lines()
+            self.lines_list=[]
+            for i in self.resh.lines:
+                self.line = QtWidgets.QGraphicsLineItem(i.x1, i.y1, i.x2, i.y2)
+                self.lines_list.append(self.line)
+                self.scene.addItem(self.line)
             for i in range(self.a):
                 for j in range(self.b):
                     x = matrix[i][j].x-matrix[i][j]._x_
@@ -173,49 +150,20 @@ class View():
         else:
             self.btn_stop.setText('&Остановить')
 
-    def lines(self):
+    def draw(self):
+        self.resh = Reshetka(self.a, self.b, self.dt, self.l, self.k, self.m, self.radio_check)
+        self.ellipse = []
         self.lines_list=[]
         for i in range(self.a):
             for j in range(self.b):
-                if self.radio_check[0]:
-                    if i != self.a-1:
-                        self.line = QtWidgets.QGraphicsLineItem(self.resh.matrix[i][j].x+325, self.resh.matrix[i][j].y+125, self.resh.matrix[i+1][j].x+325, self.resh.matrix[i+1][j].y+125)
-                        self.lines_list.append(self.line)
-                        self.scene.addItem(self.line)
-                    if j != self.b-1:
-                        self.line = QtWidgets.QGraphicsLineItem(self.resh.matrix[i][j].x+325, self.resh.matrix[i][j].y+125, self.resh.matrix[i][j+1].x+325, self.resh.matrix[i][j+1].y+125)
-                        self.lines_list.append(self.line)
-                        self.scene.addItem(self.line)
-                    if i != self.a-1 and j != self.b-1 and i%2 == 0:
-                        self.line = QtWidgets.QGraphicsLineItem(self.resh.matrix[i][j].x+325, self.resh.matrix[i][j].y+125, self.resh.matrix[i+1][j+1].x+325, self.resh.matrix[i+1][j+1].y+125)
-                        self.lines_list.append(self.line)
-                        self.scene.addItem(self.line)
-                    if i != self.a-1 and j != 0 and i%2 == 1:
-                        self.line = QtWidgets.QGraphicsLineItem(self.resh.matrix[i][j].x+325, self.resh.matrix[i][j].y+125, self.resh.matrix[i+1][j-1].x+325, self.resh.matrix[i+1][j-1].y+125)
-                        self.lines_list.append(self.line)
-                        self.scene.addItem(self.line)
-                elif self.radio_check[1]:
-                    if i != self.a-1:
-                        self.line = QtWidgets.QGraphicsLineItem(self.resh.matrix[i][j].x+325, self.resh.matrix[i][j].y+125, self.resh.matrix[i+1][j].x+325, self.resh.matrix[i+1][j].y+125)
-                        self.lines_list.append(self.line)
-                        self.scene.addItem(self.line)
-                    if j != self.b-1:
-                        self.line = QtWidgets.QGraphicsLineItem(self.resh.matrix[i][j].x+325, self.resh.matrix[i][j].y+125, self.resh.matrix[i][j+1].x+325, self.resh.matrix[i][j+1].y+125)
-                        self.lines_list.append(self.line)
-                        self.scene.addItem(self.line)
-                elif self.radio_check[2]:
-                    if i != self.a-1:
-                        self.line = QtWidgets.QGraphicsLineItem(self.resh.matrix[i][j].x+325, self.resh.matrix[i][j].y+125, self.resh.matrix[i+1][j].x+325, self.resh.matrix[i+1][j].y+125)
-                        self.lines_list.append(self.line)
-                        self.scene.addItem(self.line)
-                    if j != self.b-1 and (i+j)%2 == 0:
-                        self.line = QtWidgets.QGraphicsLineItem(self.resh.matrix[i][j].x+325, self.resh.matrix[i][j].y+125, self.resh.matrix[i][j+1].x+325, self.resh.matrix[i][j+1].y+125)
-                        self.lines_list.append(self.line)
-                        self.scene.addItem(self.line)
-                    if j != self.b-1 and i%2+j%2 == 2:
-                        self.line = QtWidgets.QGraphicsLineItem(self.resh.matrix[i][j].x+325, self.resh.matrix[i][j].y+125, self.resh.matrix[i][j+1].x+325, self.resh.matrix[i][j+1].y+125)
-                        self.lines_list.append(self.line)
-                        self.scene.addItem(self.line)
+                self.ell = QtWidgets.QGraphicsEllipseItem(300, 100, 50, 50)
+                self.ell.setPos(self.resh.matrix[i][j].x, self.resh.matrix[i][j].y)
+                self.ellipse.append(self.ell)
+                self.scene.addItem(self.ell)
+        for i in self.resh.lines:
+            self.line = QtWidgets.QGraphicsLineItem(i.x1, i.y1, i.x2, i.y2)
+            self.lines_list.append(self.line)
+            self.scene.addItem(self.line)
                     
 
 class Graph():
@@ -231,48 +179,18 @@ class Graph():
         self.fig, self.WT = plt.subplots()
         plt.show()
 
-    def update(self, matrix, a, b, radio_check):
-        self.Wp = 0
-        self.Wk = 0
-        self.W = 0
-        for i in range(a):
-            for j in range(b):
-                self.Wk += matrix[i][j].m*(matrix[i][j].V**2)/2
-                if radio_check[0]:
-                    if i != a-1:
-                        self.Wp += 0.5*matrix[i][j].k*(sqrt((matrix[i+1][j].y-matrix[i][j].y)**2+(matrix[i+1][j].x-matrix[i][j].x)**2)-matrix[i][j].l)**2
-                    if j != b-1:
-                        self.Wp += 0.5*matrix[i][j].k*(sqrt((matrix[i][j+1].y-matrix[i][j].y)**2+(matrix[i][j+1].x-matrix[i][j].x)**2)-matrix[i][j].l)**2
-                    if i != a-1 and j != b-1 and i%2 == 0:
-                        self.Wp += 0.5*matrix[i][j].k*(sqrt((matrix[i+1][j+1].y-matrix[i][j].y)**2+(matrix[i+1][j+1].x-matrix[i][j].x)**2)-matrix[i][j].l)**2
-                    if i != a-1 and j != 0 and i%2 == 1:
-                        self.Wp += 0.5*matrix[i][j].k*(sqrt((matrix[i+1][j-1].y-matrix[i][j].y)**2+(matrix[i+1][j-1].x-matrix[i][j].x)**2)-matrix[i][j].l)**2
-                elif radio_check[1]:
-                    if i != a-1:
-                        self.Wp += 0.5*matrix[i][j].k*(sqrt((matrix[i+1][j].y-matrix[i][j].y)**2+(matrix[i+1][j].x-matrix[i][j].x)**2)-matrix[i][j].l)**2
-                    if j != b-1:
-                        self.Wp += 0.5*matrix[i][j].k*(sqrt((matrix[i][j+1].y-matrix[i][j].y)**2+(matrix[i][j+1].x-matrix[i][j].x)**2)-matrix[i][j].l)**2
-                elif radio_check[2]:
-                    pass
-        self.W = self.Wk+self.Wp
-        del self.list_Wp[0]
-        del self.list_Wk[0]
-        del self.list_W[0]
-        self.list_Wp.append(self.Wp/(10**6))
-        self.list_Wk.append(self.Wk/(10**6))
-        self.list_W.append(self.W/(10**6))
+    def update(self, Wp, Wk, W):
+        self.list_Wp.append(Wp/(5*10**6))
+        self.list_Wk.append(Wk/(5*10**6))
+        self.list_W.append(W/(5*10**6))
         self.t += self.dt
+        self.list_t.append(self.t)
         self.WT.clear()
-        if self.t >= self.dt*9:
-            del self.list_t[0]
-            self.list_t.append(self.t)
-            self.WT.set_xlim(self.t-self.dt*9, self.t)
-        else:
-            self.WT.set_xlim(0, 0.009)
+        self.WT.set_xlim(0, self.t)
         self.WT.set_title('Энергия системы', fontsize = 20)
         self.WT.set_xlabel('Время, с', fontsize = 15)
         self.WT.set_ylabel('Энергия, МДж', fontsize = 15)
-        self.WT.set_ylim(0, 500)
+        self.WT.set_ylim(0, 600)
         self.WT.plot(self.list_t, self.list_Wp, label = 'Wp(t)')
         self.WT.plot(self.list_t, self.list_Wk, label = 'Wk(t)')
         self.WT.plot(self.list_t, self.list_W, label = 'W(t)')
