@@ -1,4 +1,7 @@
 from math import sqrt
+from PyQt5.QtWidgets import QGraphicsEllipseItem, QGraphicsLineItem
+from PyQt5.QtCore import Qt, QMimeData
+from PyQt5.QtGui import QDrag, QMouseEvent
 
 class Chastica():
     def __init__(self, m, i, j, k, l, radio_check):
@@ -108,10 +111,6 @@ class Reshetka():
                         lines_list.append(Lines(self.matrix[i][j].x+325, self.matrix[i][j].y+125, self.matrix[i][j+1].x+325, self.matrix[i][j+1].y+125))
         return lines_list
 
-    def displacement(self, i, j, displ):
-        self.matrix[i][j].x += displ[0]
-        self.matrix[i][j].y += displ[1]
-
     def step(self):
         for i in range(1, self.a-1):
             for j in range(1, self.b-1):
@@ -124,6 +123,10 @@ class Reshetka():
         self.count_Wp()
         self.count_Wk()
         self.W = self.Wp+self.Wk
+
+    def displacement(self, i, j, displ):
+        self.matrix[i][j].x += displ[0]
+        self.matrix[i][j].y += displ[1]
 
     def get_neighbours(self, i, j):
         particles = []
@@ -160,3 +163,24 @@ class Reshetka():
         for i in range(self.a):
             for j in range(self.b):
                 self.Wk += 0.5*(self.matrix[i][j].Vx**2+self.matrix[i][j].Vy**2)*self.m
+
+
+class Ellipse(QGraphicsEllipseItem):
+    def __init__(self, x, y, i, j, a, b):
+        super().__init__(300+x, 100+y, 50, 50)
+        self.x = x+300
+        self.y = y+100
+        self.i = i
+        self.j = j
+        if i != 0 and j != 0 and i != a-1 and j != b-1:
+            self.setFlag(True)
+
+    def mouseReleaseEvent(self, event: QMouseEvent):
+        self.d = event.pos()
+        self.x = self.d.x()
+        self.y = self.d.y()
+
+
+class Line(QGraphicsLineItem):
+    def __init__(self, x1, y1, x2, y2):
+        super().__init__(x1, y1, x2, y2)
