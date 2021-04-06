@@ -202,7 +202,7 @@ class Graph(FigureCanvas):
         self.WT.set_title('Энергия системы', fontsize = 20)
         self.WT.set_xlabel('Время, с', fontsize = 15)
         self.WT.set_ylabel('Энергия, ГДж', fontsize = 15)
-        self.WT.set_ylim(0, 800)
+        self.WT.set_ylim(0, 1500)
         self.WT.plot(self.list_t, self.list_Wp, label = 'Wp(t)')
         self.WT.plot(self.list_t, self.list_Wk, label = 'Wk(t)')
         self.WT.plot(self.list_t, self.list_W, label = 'W(t)')
