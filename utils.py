@@ -45,8 +45,8 @@ class Chastica():
                 dy = (d-self.l)*(part.y-self.y)/d
                 self.Fx += self.k*(d-self.l)*(part.x-self.x)/d
                 self.Fy += self.k*(d-self.l)*(part.y-self.y)/d
-                self.Vx += dt*self.Fx/self.m
-                self.Vy += dt*self.Fy/self.m
+        self.Vx += dt*self.Fx/self.m
+        self.Vy += dt*self.Fy/self.m
 
     def move(self, dt):
         if not self.pause:
