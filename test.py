@@ -4,18 +4,25 @@ from math import sqrt
 from PyQt5 import QtWidgets, QtGui, QtCore
 import matplotlib.pyplot as plt
 from utils import Chastica, Reshetka, Ellipse, Line
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+from PyQt5.QtGui import QMouseEvent
 import sys
 
 
 class Processy():
     def __init__(self, resh, graph, radio_check, a, b, window):
+        #for i in range(300):
         while True:         # запуск цикла
-            time.sleep(0.005)
-            if resh.matrix[0][0].pause == False:
-                graph.update(resh.Wp, resh.Wk, resh.W)    # обновление графика
-            resh.step()                                         # пересчет данных
-            window.move_graphics(resh.matrix)                   # обновление изображения
-            QtWidgets.qApp.processEvents()
+            if resh.matrix[0][0].ell.pause == False:
+                time.sleep(0.005)
+                if resh.matrix[0][0].ell.pause == False:
+                    graph.update(resh.Wp, resh.Wk, resh.W)    # обновление графика
+                resh.step()                                         # пересчет данных
+                window.move_graphics(resh.matrix)                   # обновление изображения
+                QtWidgets.qApp.processEvents()
+            else:
+                break
 
     
 class View():
@@ -37,20 +44,21 @@ class View():
         self.btn_start_pressed = False
         self.btn_stop.setEnabled(False)
         
-        self.vvod_a_b_m_k_l_dt = [QtWidgets.QSpinBox(self.window) for i in range(5)]
-        self.vvod = QtWidgets.QDoubleSpinBox(self.window)
-        self.vvod_a_b_m_k_l_dt.append(self.vvod)
+        self.vvod_a_b_m_k_l_dt = [QtWidgets.QSpinBox(self.window) for i in range(2)]
+        for i in range(4):
+            self.vvod = QtWidgets.QDoubleSpinBox(self.window)
+            self.vvod_a_b_m_k_l_dt.append(self.vvod)
         for i in range(len(self.vvod_a_b_m_k_l_dt)):
             self.vvod_a_b_m_k_l_dt[i].setGeometry(25, 50+75*(i+1), 200, 30)
-            self.vvod_a_b_m_k_l_dt[i].setRange(-1, 1000000)
+            self.vvod_a_b_m_k_l_dt[i].setRange(-1, 10**8)
         self.vvod_a_b_m_k_l_dt[0].setMinimum(3)
         self.vvod_a_b_m_k_l_dt[1].setMinimum(3)
-        self.vvod.setDecimals(3)
+        self.vvod.setDecimals(4)
         
         self.vvod_a_b_m_k_l_dt[0].setValue(5)
         self.vvod_a_b_m_k_l_dt[1].setValue(5)
         self.vvod_a_b_m_k_l_dt[2].setValue(100)
-        self.vvod_a_b_m_k_l_dt[3].setValue(50000)
+        self.vvod_a_b_m_k_l_dt[3].setValue(5*10**7)
         self.vvod_a_b_m_k_l_dt[4].setValue(100)
         self.vvod_a_b_m_k_l_dt[5].setValue(0.001)
         
@@ -95,12 +103,15 @@ class View():
         self.window.show()
 
     def radiobutton(self):
-        #if not self.btn_start_pressed:
+        self.resh.matrix[0][0].ell.pause = True
         self.scene.clear()
         for i in range(len(self.radio_3_4_6)):
             self.radio_check[i]=self.radio_3_4_6[i].isChecked()
         self.draw()
         self.btn_stop.setEnabled(False)
+        self.btn_start_pressed = False
+        self.btn_start.setEnabled(True)
+
 
     def options(self):
         if not self.btn_start_pressed:
@@ -117,17 +128,16 @@ class View():
         self.graph = Graph(self.dt)
         self.btn_start_pressed = True
         self.btn_stop.setEnabled(True)
+        self.btn_start.setEnabled(False)
         self.btn_stop.setText('&Остановить')
         for i in range(self.a):
             for j in range(self.b):
-                self.resh.matrix[i][j].pause = False
-                self.resh.matrix[i][j].x = self.ellipse[i*self.b+j].x
-                self.resh.matrix[i][j].y = self.ellipse[i*self.b+j].y
+                self.resh.matrix[i][j].ell.pause = False
                 
         self.programm = Processy(self.resh, self.graph, self.radio_check, self.a, self.b, self)
 
     def move_graphics(self, matrix):            #перемещение изображений
-        if self.resh.matrix[0][0].pause == False:
+        if self.resh.matrix[0][0].ell.pause == False:
             for i in self.lines_list:
                 self.scene.removeItem(i)
             self.lines_list=[]
@@ -137,8 +147,8 @@ class View():
                 self.scene.addItem(self.line)
             for i in range(self.a):
                 for j in range(self.b):
-                    x = matrix[i][j].x-matrix[i][j]._x_
-                    y = matrix[i][j].y-matrix[i][j]._y_
+                    x = matrix[i][j].ell.x-matrix[i][j].ell.x_
+                    y = matrix[i][j].ell.y-matrix[i][j].ell.y_
                     self.ellipse[i*self.b+j].moveBy(x, y)
 
     def stop(self):
@@ -146,11 +156,12 @@ class View():
         self.resh.dt = self.dt
         for i in range(self.a):
             for j in range(self.b):
-                self.resh.matrix[i][j].pause = not self.resh.matrix[i][j].pause
-        if self.resh.matrix[0][0].pause == True:
+                self.resh.matrix[i][j].ell.pause = not self.resh.matrix[i][j].ell.pause
+        if self.resh.matrix[0][0].ell.pause == True:
             self.btn_stop.setText('&Продолжить')
         else:
             self.btn_stop.setText('&Остановить')
+            self.programm = Processy(self.resh, self.graph, self.radio_check, self.a, self.b, self)
 
     def draw(self):
         self.resh = Reshetka(self.a, self.b, self.dt, self.l, self.k, self.m, self.radio_check)
@@ -158,16 +169,16 @@ class View():
         self.lines_list=[]
         for i in range(self.a):
             for j in range(self.b):
-                self.ell = Ellipse(self.resh.matrix[i][j].x, self.resh.matrix[i][j].y, i, j, self.a, self.b)
-                self.ellipse.append(self.ell)
-                self.scene.addItem(self.ell)
+                self.ellipse.append(self.resh.matrix[i][j])
+                self.resh.matrix[i][j].setBrush(QtGui.QBrush(self.resh.matrix[i][j].color, style = QtCore.Qt.SolidPattern))
+                self.scene.addItem(self.resh.matrix[i][j])
         for i in self.resh.lines:
             self.line = Line(i.x1, i.y1, i.x2, i.y2)
             self.lines_list.append(self.line)
             self.scene.addItem(self.line)
                     
 
-class Graph():
+class Graph(FigureCanvas):
     def __init__(self, dt):
         self.list_Wp = [0 for i in range(10)]
         self.list_Wk = [0 for i in range(10)]
@@ -180,7 +191,32 @@ class Graph():
         self.fig, self.WT = plt.subplots()
         plt.show()
 
+    '''def __init__(self, dt, parent=None, width=50, height=50, dpi=100):
+        print('1')
+        fig = Figure(figsize=(width, height), dpi=dpi)
+        print('2')
+
+        FigureCanvas.__init__(self, fig)
+        print('3')
+        #self.setParent(parent)
+        print('4')
+
+        #FigureCanvas.setSizePolicy(self,
+        #                           QSizePolicy.Expanding,
+        #                           QSizePolicy.Expanding)
+        print('5')
+        FigureCanvas.updateGeometry(self)
+        self.ax = self.figure.add_subplot(111)
+        self.ax.set_facecolor((159 / 255, 212 / 255, 251 / 255))
+        self.ax1 = self.figure.add_axes(self.ax.get_position(), frameon=False)
+        print('6')
+        #self.ax.grid()
+        print('7')
+        self.draw()
+        print('8')'''
+
     def update(self, Wp, Wk, W):
+        pass
         self.list_Wp.append(Wp/(10**9))
         self.list_Wk.append(Wk/(10**9))
         self.list_W.append(W/(10**9))
@@ -191,7 +227,7 @@ class Graph():
         self.WT.set_title('Энергия системы', fontsize = 20)
         self.WT.set_xlabel('Время, с', fontsize = 15)
         self.WT.set_ylabel('Энергия, ГДж', fontsize = 15)
-        self.WT.set_ylim(0, 1000)
+        self.WT.set_ylim(0, 5000)
         self.WT.plot(self.list_t, self.list_Wp, label = 'Wp(t)')
         self.WT.plot(self.list_t, self.list_Wk, label = 'Wk(t)')
         self.WT.plot(self.list_t, self.list_W, label = 'W(t)')

@@ -1,4 +1,5 @@
 from math import sqrt
+from PyQt5 import QtGui, QtCore, QtWidgets
 from PyQt5.QtWidgets import QGraphicsEllipseItem, QGraphicsLineItem
 from PyQt5.QtCore import Qt, QMimeData
 from PyQt5.QtGui import QDrag, QMouseEvent
@@ -14,22 +15,22 @@ class Chastica():
         self.Vy = 0
         self.V = 0
         if radio_check[0]:
-            self.x = l*j+(i+1)%2*(l/2)
-            self.y = sqrt(l**2-(l/2)**2)*i
+            self.x = l*j+(i+1)%2*(l/2)+300
+            self.y = sqrt(l**2-(l/2)**2)*i+50
             self.z = 0
         elif radio_check[1]:
-            self.x = l*j
-            self.y = l*i
+            self.x = l*j+300
+            self.y = l*i+50
             self.z = 0
         elif radio_check[2]:
-            self.x = l*j+(i+1)%2*l/2+(j+1)//2*l
+            self.x = l*j+(i+1)%2*l/2+(j+1)//2*l+300
             if i%2 == 0 and j%2 == 1:
                 self.x -= l
-            self.y = sqrt(l**2-(l/2)**2)*i
+            self.y = sqrt(l**2-(l/2)**2)*i+50
             self.z = 0
-        self._x_ = self.x
-        self._y_ = self.y
-        self._z_ = self.z
+        self.x_ = self.x
+        self.y_ = self.y
+        self.z_ = self.z
         self.Fx = 0
         self.Fy = 0
         self.pause = False
@@ -49,12 +50,12 @@ class Chastica():
 
     def move(self, dt):
         if not self.pause:
-            _x_ = self._x_
-            _y_ = self._y_
-            self._x_ = self.x
-            self._y_ = self.y
-            self.x = 2*self.x-_x_+(self.Fx/self.m)*(dt**2)
-            self.y = 2*self.y-_y_+(self.Fy/self.m)*(dt**2)
+            x_ = self.x_
+            y_ = self.y_
+            self.x_ = self.x
+            self.y_ = self.y
+            self.x = 2*self.x-x_+(self.Fx/self.m)*(dt**2)
+            self.y = 2*self.y-y_+(self.Fy/self.m)*(dt**2)
 
             
 class Lines():
@@ -82,7 +83,7 @@ class Reshetka():
         self.lines = self.create_lines()
 
     def create_matrix(self):
-        return [[Chastica(self.m, i, j, self.k, self.l, self.radio_check) for j in range(self.b)] for i in range(self.a)]
+        return [[Ellipse(self.m, i, j, self.k, self.l, self.radio_check, self.a, self.b) for j in range(self.b)] for i in range(self.a)]
 
     def create_lines(self):
         lines_list = []
@@ -90,67 +91,63 @@ class Reshetka():
             for j in range(self.b):
                 if self.radio_check[0]:
                     if i != self.a-1:
-                        lines_list.append(Lines(self.matrix[i][j].x+325, self.matrix[i][j].y+125, self.matrix[i+1][j].x+325, self.matrix[i+1][j].y+125))
+                        lines_list.append(Lines(self.matrix[i][j].ell.x+25, self.matrix[i][j].ell.y+25, self.matrix[i+1][j].ell.x+25, self.matrix[i+1][j].ell.y+25))
                     if j != self.b-1:
-                        lines_list.append(Lines(self.matrix[i][j].x+325, self.matrix[i][j].y+125, self.matrix[i][j+1].x+325, self.matrix[i][j+1].y+125))
+                        lines_list.append(Lines(self.matrix[i][j].ell.x+25, self.matrix[i][j].ell.y+25, self.matrix[i][j+1].ell.x+25, self.matrix[i][j+1].ell.y+25))
                     if i != self.a-1 and j != self.b-1 and i%2 == 0:
-                        lines_list.append(Lines(self.matrix[i][j].x+325, self.matrix[i][j].y+125, self.matrix[i+1][j+1].x+325, self.matrix[i+1][j+1].y+125))
+                        lines_list.append(Lines(self.matrix[i][j].ell.x+25, self.matrix[i][j].ell.y+25, self.matrix[i+1][j+1].ell.x+25, self.matrix[i+1][j+1].ell.y+25))
                     if i != self.a-1 and j != 0 and i%2 == 1:
-                        lines_list.append(Lines(self.matrix[i][j].x+325, self.matrix[i][j].y+125, self.matrix[i+1][j-1].x+325, self.matrix[i+1][j-1].y+125))
+                        lines_list.append(Lines(self.matrix[i][j].ell.x+25, self.matrix[i][j].ell.y+25, self.matrix[i+1][j-1].ell.x+25, self.matrix[i+1][j-1].ell.y+25))
                 elif self.radio_check[1]:
                     if i != self.a-1:
-                        lines_list.append(Lines(self.matrix[i][j].x+325, self.matrix[i][j].y+125, self.matrix[i+1][j].x+325, self.matrix[i+1][j].y+125))
+                        lines_list.append(Lines(self.matrix[i][j].ell.x+25, self.matrix[i][j].ell.y+25, self.matrix[i+1][j].ell.x+25, self.matrix[i+1][j].ell.y+25))
                     if j != self.b-1:
-                        lines_list.append(Lines(self.matrix[i][j].x+325, self.matrix[i][j].y+125, self.matrix[i][j+1].x+325, self.matrix[i][j+1].y+125))
+                        lines_list.append(Lines(self.matrix[i][j].ell.x+25, self.matrix[i][j].ell.y+25, self.matrix[i][j+1].ell.x+25, self.matrix[i][j+1].ell.y+25))
                 elif self.radio_check[2]:
                     if i != self.a-1:
-                        lines_list.append(Lines(self.matrix[i][j].x+325, self.matrix[i][j].y+125, self.matrix[i+1][j].x+325, self.matrix[i+1][j].y+125))
+                        lines_list.append(Lines(self.matrix[i][j].ell.x+25, self.matrix[i][j].ell.y+25, self.matrix[i+1][j].ell.x+25, self.matrix[i+1][j].ell.y+25))
                     if j != self.b-1 and (i+j)%2 == 0:
-                        lines_list.append(Lines(self.matrix[i][j].x+325, self.matrix[i][j].y+125, self.matrix[i][j+1].x+325, self.matrix[i][j+1].y+125))
+                        lines_list.append(Lines(self.matrix[i][j].ell.x+25, self.matrix[i][j].ell.y+25, self.matrix[i][j+1].ell.x+25, self.matrix[i][j+1].ell.y+25))
                     if j != self.b-1 and i%2+j%2 == 2:
-                        lines_list.append(Lines(self.matrix[i][j].x+325, self.matrix[i][j].y+125, self.matrix[i][j+1].x+325, self.matrix[i][j+1].y+125))
+                        lines_list.append(Lines(self.matrix[i][j].ell.x+25, self.matrix[i][j].ell.y+25, self.matrix[i][j+1].ell.x+25, self.matrix[i][j+1].ell.y+25))
         return lines_list
 
     def step(self):
         for i in range(1, self.a-1):
             for j in range(1, self.b-1):
                 particles = self.get_neighbours(i, j)
-                self.matrix[i][j].sily(particles, self.dt)
+                self.matrix[i][j].ell.sily(particles, self.dt)
         for i in range(1, self.a-1):
             for j in range(1, self.b-1):
-                self.matrix[i][j].move(self.dt)
+                self.matrix[i][j].ell.move(self.dt)
         self.lines = self.create_lines()
         self.count_Wp()
         self.count_Wk()
         self.W = self.Wp+self.Wk
 
-    def displacement(self, i, j, displ):
-        self.matrix[i][j].x += displ[0]
-        self.matrix[i][j].y += displ[1]
-
     def get_neighbours(self, i, j):
         particles = []
         if self.radio_check[0]:
             for b in range(2):
-                particles.append(self.matrix[i][j+(-1)**b])
+                particles.append(self.matrix[i][j+(-1)**b].ell)
             for a in range(2):
                 for b in range(2):
                     if i%2 == 0:
-                        particles.append(self.matrix[i+(-1)**a][j+b])
+                        particles.append(self.matrix[i+(-1)**a][j+b].ell)
                     else:
-                        particles.append(self.matrix[i+(-1)**a][j-b])
+                        particles.append(self.matrix[i+(-1)**a][j-b].ell)
         elif self.radio_check[1]:
             for a in range(2):
-                particles.append(self.matrix[i+(-1)**a][j])
+                particles.append(self.matrix[i+(-1)**a][j].ell)
             for b in range(2):
-                particles.append(self.matrix[i][j+(-1)**b])
+                particles.append(self.matrix[i][j+(-1)**b].ell)
         elif self.radio_check[2]:
             if (i + j)%2 == 0:
-                particles.append(self.matrix[i][j+1])
+                particles.append(self.matrix[i][j+1].ell)
             else:
-                particles.append(self.matrix[i][j-1])
+                particles.append(self.matrix[i][j-1].ell)
             for a in range(2):
-                particles.append(self.matrix[i+(-1)**a][j])
+                particles.append(self.matrix[i+(-1)**a][j].ell)
         return particles
 
     def count_Wp(self):
@@ -162,23 +159,50 @@ class Reshetka():
         self.Wk = 0
         for i in range(self.a):
             for j in range(self.b):
-                self.Wk += 0.5*(self.matrix[i][j].Vx**2+self.matrix[i][j].Vy**2)*self.m
+                self.Wk += 0.5*(self.matrix[i][j].ell.Vx**2+self.matrix[i][j].ell.Vy**2)*self.m
 
 
 class Ellipse(QGraphicsEllipseItem):
-    def __init__(self, x, y, i, j, a, b):
-        super().__init__(300+x, 100+y, 50, 50)
-        self.x = x+300
-        self.y = y+100
+    def __init__(self, m, i, j, k, l, radio_check, a, b):
+        self.ell = Chastica(m, i, j, k, l, radio_check)
+        super().__init__(self.ell.x, self.ell.y, 50, 50)
+        if i != 0 and j != 0 and i != a-1 and j != b-1:
+            self.setFlag(QtWidgets.QGraphicsItem.ItemIsMovable, True)
         self.i = i
         self.j = j
-        if i != 0 and j != 0 and i != a-1 and j != b-1:
-            self.setFlag(True)
+        self.a = a
+        self.b = b
+        self.dx = 0
+        self.dy = 0
+        self.color = QtGui.QColor(0,0,0)
+        self.clicked = False
+        self.moved = False
+
+    def mousePressEvent(self, event: QMouseEvent):
+        if self.i != 0 and self.j != 0 and self.i != self.a-1 and self.j != self.b-1:
+            self.X0 = event.screenPos().x()
+            self.Y0 = event.screenPos().y()
+            if event.button() == 2:
+                if not self.clicked:
+                    self.color = QtGui.QColor(150,0,0)
+                    self.clicked = True
+                else:
+                    self.color = QtGui.QColor(0,0,0)
+                    self.clicked = False
+                self.setBrush(QtGui.QBrush(self.color, style = QtCore.Qt.SolidPattern))
 
     def mouseReleaseEvent(self, event: QMouseEvent):
-        self.d = event.pos()
-        self.x = self.d.x()
-        self.y = self.d.y()
+        if self.i != 0 and self.j != 0 and self.i != self.a-1 and self.j != self.b-1:
+            self.dx = event.screenPos().x()-self.X0
+            self.dy = event.screenPos().y()-self.Y0
+            self.ell.x += self.dx
+            self.ell.y += self.dy
+            if event.button() == 1:
+                self.setFlag(QtWidgets.QGraphicsItem.ItemIsMovable, False)
+                if self.moved:
+                    self.ell.x -= self.dx
+                    self.ell.y -= self.dy
+                self.moved = True
 
 
 class Line(QGraphicsLineItem):
